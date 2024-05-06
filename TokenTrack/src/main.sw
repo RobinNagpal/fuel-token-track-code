@@ -7,11 +7,9 @@ use std::{hash::Hash,};
 // Define storage variables for the contract
 storage {
     // `balances` is a StorageMap that maps identities to their u64 balances
-    contract_balances: StorageMap<ContractId, u64> = StorageMap::<ContractId, u64> {},
-    address_balances: StorageMap<Address, u64> = StorageMap::<Address, u64> {},
+    balances: StorageMap<Identity, u64> = StorageMap::<Identity, u64> {},
     // `total_supply` stores the total number of tokens in circulation
     total_supply: u64 = 0,
-    
 }
 
 // Define the contract's ABI (Application Binary Interface)
@@ -32,9 +30,11 @@ abi MyContract {
     #[storage(read, write)]
     fn transfer_coins_to_contract(coins: u64, from: ContractId, target: ContractId);
 
-    // Function to retrieve the storage key for the balances map
     #[storage(read)]
-    fn get_address_balances() -> StorageKey<StorageMap<Address, u64>>;
+    fn read_addr_balance(addr: Address) -> u64;
+
+    #[storage(read)]
+    fn read_contract_balance(addr: ContractId) -> u64;
 }
 
 // Implement the `MyContract` trait for this contract
@@ -49,7 +49,7 @@ impl MyContract for Contract {
 
         match recipient {
             Identity::Address(addr) => transfer_to_address(addr, amount),
-            Identity::ContractId(id) => transfer_to_contract(id, amount),
+            Identity::ContractId(addr) => transfer_to_contract(addr, amount),
         };
     }
 
@@ -70,31 +70,37 @@ impl MyContract for Contract {
     // Implementation of the `transfer_coins_to_address` function
     #[storage(read, write)]
     fn transfer_coins_to_address(coins: u64, from: Address, target: Address) {
+        let b256_addr_from = from.into();
         // Access the sender's balance (or initialize it to 0 if it doesn't exist)
-        let mut from_balance = storage.address_balances.get(from).try_read().unwrap_or(0);
+        let identity_from: Identity = Identity::Address(Address::from(b256_addr_from)); // Casting Address to Identity
+        let mut from_balance = storage.balances.get(identity_from).try_read().unwrap_or(0);
 
         // Ensure sufficient balance before transferring
-        assert(from_balance >= coins);
+        require(from_balance >= coins, "Not enough tokens");
 
         // Update the sender's balance after transferring
         from_balance -= coins;
 
+        let b256_addr_to = target.into();
         // Access the recipient's balance (or initialize it to 0 if it doesn't exist)
-        let mut target_balance = storage.address_balances.get(target).try_read().unwrap_or(0);
+        let identity_to: Identity = Identity::Address(Address::from(b256_addr_to)); // Casting Address to Identity
+        let mut target_balance = storage.balances.get(identity_to).try_read().unwrap_or(0);
 
         // Update the recipient's balance with the transferred amount
         target_balance += coins;
 
         // Store the updated balances back in the storage map
-        storage.address_balances.insert(from, from_balance);
-        storage.address_balances.insert(target, target_balance);
+        storage.balances.insert(identity_from, from_balance);
+        storage.balances.insert(identity_to, target_balance);
     }
 
     // Placeholder function for transferring tokens to a contract (not implemented yet)
     #[storage(read, write)]
     fn transfer_coins_to_contract(coins: u64, from: ContractId, target: ContractId) {
+        let b256_addr_from = from.into();
         // Access the sender's balance (or initialize it to 0 if it doesn't exist)
-        let mut from_balance = storage.contract_balances.get(from).try_read().unwrap_or(0);
+        let identity_from: Identity = Identity::ContractId(ContractId::from(b256_addr_from)); // Casting ContractId to Identity
+        let mut from_balance = storage.balances.get(identity_from).try_read().unwrap_or(0);
 
         // Ensure sufficient balance before transferring
         assert(from_balance >= coins);
@@ -102,43 +108,59 @@ impl MyContract for Contract {
         // Update the sender's balance after transferring
         from_balance -= coins;
 
+        let b256_addr_to = target.into();
         // Access the recipient's balance (or initialize it to 0 if it doesn't exist)
-        let mut target_balance = storage.contract_balances.get(target).try_read().unwrap_or(0);
+        let identity_to: Identity = Identity::ContractId(ContractId::from(b256_addr_to)); // Casting ContractId to Identity
+        let mut target_balance = storage.balances.get(identity_to).try_read().unwrap_or(0);
 
         // Update the recipient's balance with the transferred amount
         target_balance += coins;
 
         // Store the updated balances back in the storage map
-        storage.contract_balances.insert(from, from_balance);
-        storage.contract_balances.insert(target, target_balance);
+        storage.balances.insert(identity_from, from_balance);
+        storage.balances.insert(identity_to, target_balance);
     }
 
-    // Function to retrieve the storage key for the balances map
     #[storage(read)]
-    fn get_address_balances() -> StorageKey<StorageMap<Address, u64>> {
-        // Return the storage key for the balances map
-        return storage.address_balances;
+    fn read_addr_balance(addr: Address) -> u64 {
+        let b256_addr = addr.into();
+        let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
+        return storage.balances.get(identity).try_read().unwrap_or(0);
+    }
+
+    #[storage(read)]
+    fn read_contract_balance(addr: ContractId) -> u64 {
+        let b256_addr = addr.into();
+        let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
+        return storage.balances.get(identity).try_read().unwrap_or(0);
     }
 }
 
 #[storage(read, write)]
 fn transfer_to_address(addr: Address, amount: u64) {
-    let mut balance = storage.address_balances.get(addr).try_read().unwrap_or(0);
+    let b256_addr = addr.into();
+    // Access the sender's balance (or initialize it to 0 if it doesn't exist)
+    let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
+    let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
     balance += amount;
-    storage.address_balances.insert(addr, balance);
+    storage.balances.insert(identity, balance);
 }
 
 #[storage(read, write)]
 fn transfer_to_contract(addr: ContractId, amount: u64) {
-    let mut balance = storage.contract_balances.get(addr).try_read().unwrap_or(0);
+    let b256_addr = addr.into();
+    let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
+    let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
     balance += amount;
-    storage.contract_balances.insert(addr, balance);
+    storage.balances.insert(identity, balance);
 }
 
 #[storage(read, write)]
 fn burn_from_address(addr: Address, amount: u64) {
+    let b256_addr = addr.into();
+    let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
     // Access the target's balance (or initialize it to 0 if it doesn't exist)
-    let mut target_balance = storage.address_balances.get(addr).try_read().unwrap_or(0);
+    let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
 
     // Ensure sufficient balance before burning
     assert(target_balance >= amount);
@@ -147,13 +169,15 @@ fn burn_from_address(addr: Address, amount: u64) {
     target_balance -= amount;
 
     // Store the updated balance back in the storage map
-    storage.address_balances.insert(addr, target_balance);
+    storage.balances.insert(identity, target_balance);
 }
 
 #[storage(read, write)]
 fn burn_from_contract(addr: ContractId, amount: u64) {
+    let b256_addr = addr.into();
+    let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
     // Access the target's balance (or initialize it to 0 if it doesn't exist)
-    let mut target_balance = storage.contract_balances.get(addr).try_read().unwrap_or(0);
+    let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
 
     // Ensure sufficient balance before burning
     assert(target_balance >= amount);
@@ -162,5 +186,5 @@ fn burn_from_contract(addr: ContractId, amount: u64) {
     target_balance -= amount;
 
     // Store the updated balance back in the storage map
-    storage.contract_balances.insert(addr, target_balance);
+    storage.balances.insert(identity, target_balance);
 }

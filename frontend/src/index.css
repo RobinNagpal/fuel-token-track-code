@@ -17,8 +17,10 @@ code {
     flex-direction: column;
     gap: 20px;
     padding: 20px;
-    max-width: 600px;
+    max-width: 800px;
     margin: auto;
+    height: 90vh;
+    justify-content: center;
 }
 
 .form-field {

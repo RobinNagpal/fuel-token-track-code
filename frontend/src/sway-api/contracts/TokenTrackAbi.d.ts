@@ -29,15 +29,10 @@ export type AddressInput = { value: string };
 export type AddressOutput = AddressInput;
 export type ContractIdInput = { value: string };
 export type ContractIdOutput = ContractIdInput;
-export type StorageKeyInput<T> = { slot: string, offset: BigNumberish, field_id: string };
-export type StorageKeyOutput<T> = { slot: string, offset: BN, field_id: string };
-export type StorageMapInput<K, V> = {  };
-export type StorageMapOutput<K, V> = StorageMapInput<K, V>;
 
 interface TokenTrackAbiInterface extends Interface {
   functions: {
     burn: FunctionFragment;
-    get_address_balances: FunctionFragment;
     mint: FunctionFragment;
     read_addr_balance: FunctionFragment;
     read_contract_balance: FunctionFragment;
@@ -46,7 +41,6 @@ interface TokenTrackAbiInterface extends Interface {
   };
 
   encodeFunctionData(functionFragment: 'burn', values: [IdentityInput, BigNumberish]): Uint8Array;
-  encodeFunctionData(functionFragment: 'get_address_balances', values: []): Uint8Array;
   encodeFunctionData(functionFragment: 'mint', values: [IdentityInput, BigNumberish]): Uint8Array;
   encodeFunctionData(functionFragment: 'read_addr_balance', values: [AddressInput]): Uint8Array;
   encodeFunctionData(functionFragment: 'read_contract_balance', values: [ContractIdInput]): Uint8Array;
@@ -54,7 +48,6 @@ interface TokenTrackAbiInterface extends Interface {
   encodeFunctionData(functionFragment: 'transfer_coins_to_contract', values: [BigNumberish, ContractIdInput, ContractIdInput]): Uint8Array;
 
   decodeFunctionData(functionFragment: 'burn', data: BytesLike): DecodedValue;
-  decodeFunctionData(functionFragment: 'get_address_balances', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'mint', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'read_addr_balance', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'read_contract_balance', data: BytesLike): DecodedValue;
@@ -66,7 +59,6 @@ export class TokenTrackAbi extends Contract {
   interface: TokenTrackAbiInterface;
   functions: {
     burn: InvokeFunction<[target: IdentityInput, amount: BigNumberish], void>;
-    get_address_balances: InvokeFunction<[], StorageKeyOutput<StorageMapOutput<AddressOutput, BN>>>;
     mint: InvokeFunction<[recipient: IdentityInput, amount: BigNumberish], void>;
     read_addr_balance: InvokeFunction<[addr: AddressInput], BN>;
     read_contract_balance: InvokeFunction<[addr: ContractIdInput], BN>;

@@ -33,12 +33,12 @@ const _abi = {
       "components": [
         {
           "name": "Address",
-          "type": 6,
+          "type": 4,
           "typeArguments": null
         },
         {
           "name": "ContractId",
-          "type": 7,
+          "type": 5,
           "typeArguments": null
         }
       ],
@@ -46,24 +46,12 @@ const _abi = {
     },
     {
       "typeId": 3,
-      "type": "generic K",
+      "type": "str",
       "components": null,
       "typeParameters": null
     },
     {
       "typeId": 4,
-      "type": "generic T",
-      "components": null,
-      "typeParameters": null
-    },
-    {
-      "typeId": 5,
-      "type": "generic V",
-      "components": null,
-      "typeParameters": null
-    },
-    {
-      "typeId": 6,
       "type": "struct Address",
       "components": [
         {
@@ -75,7 +63,7 @@ const _abi = {
       "typeParameters": null
     },
     {
-      "typeId": 7,
+      "typeId": 5,
       "type": "struct ContractId",
       "components": [
         {
@@ -87,40 +75,7 @@ const _abi = {
       "typeParameters": null
     },
     {
-      "typeId": 8,
-      "type": "struct StorageKey",
-      "components": [
-        {
-          "name": "slot",
-          "type": 1,
-          "typeArguments": null
-        },
-        {
-          "name": "offset",
-          "type": 10,
-          "typeArguments": null
-        },
-        {
-          "name": "field_id",
-          "type": 1,
-          "typeArguments": null
-        }
-      ],
-      "typeParameters": [
-        4
-      ]
-    },
-    {
-      "typeId": 9,
-      "type": "struct StorageMap",
-      "components": [],
-      "typeParameters": [
-        3,
-        5
-      ]
-    },
-    {
-      "typeId": 10,
+      "typeId": 6,
       "type": "u64",
       "components": null,
       "typeParameters": null
@@ -136,7 +91,7 @@ const _abi = {
         },
         {
           "name": "amount",
-          "type": 10,
+          "type": 6,
           "typeArguments": null
         }
       ],
@@ -157,40 +112,6 @@ const _abi = {
       ]
     },
     {
-      "inputs": [],
-      "name": "get_address_balances",
-      "output": {
-        "name": "",
-        "type": 8,
-        "typeArguments": [
-          {
-            "name": "",
-            "type": 9,
-            "typeArguments": [
-              {
-                "name": "",
-                "type": 6,
-                "typeArguments": null
-              },
-              {
-                "name": "",
-                "type": 10,
-                "typeArguments": null
-              }
-            ]
-          }
-        ]
-      },
-      "attributes": [
-        {
-          "name": "storage",
-          "arguments": [
-            "read"
-          ]
-        }
-      ]
-    },
-    {
       "inputs": [
         {
           "name": "recipient",
@@ -199,7 +120,7 @@ const _abi = {
         },
         {
           "name": "amount",
-          "type": 10,
+          "type": 6,
           "typeArguments": null
         }
       ],
@@ -223,14 +144,14 @@ const _abi = {
       "inputs": [
         {
           "name": "addr",
-          "type": 6,
+          "type": 4,
           "typeArguments": null
         }
       ],
       "name": "read_addr_balance",
       "output": {
         "name": "",
-        "type": 10,
+        "type": 6,
         "typeArguments": null
       },
       "attributes": [
@@ -246,14 +167,14 @@ const _abi = {
       "inputs": [
         {
           "name": "addr",
-          "type": 7,
+          "type": 5,
           "typeArguments": null
         }
       ],
       "name": "read_contract_balance",
       "output": {
         "name": "",
-        "type": 10,
+        "type": 6,
         "typeArguments": null
       },
       "attributes": [
@@ -269,17 +190,17 @@ const _abi = {
       "inputs": [
         {
           "name": "coins",
-          "type": 10,
+          "type": 6,
           "typeArguments": null
         },
         {
           "name": "from",
-          "type": 6,
+          "type": 4,
           "typeArguments": null
         },
         {
           "name": "target",
-          "type": 6,
+          "type": 4,
           "typeArguments": null
         }
       ],
@@ -303,17 +224,17 @@ const _abi = {
       "inputs": [
         {
           "name": "coins",
-          "type": 10,
+          "type": 6,
           "typeArguments": null
         },
         {
           "name": "from",
-          "type": 7,
+          "type": 5,
           "typeArguments": null
         },
         {
           "name": "target",
-          "type": 7,
+          "type": 5,
           "typeArguments": null
         }
       ],
@@ -334,14 +255,23 @@ const _abi = {
       ]
     }
   ],
-  "loggedTypes": [],
+  "loggedTypes": [
+    {
+      "logId": 0,
+      "loggedType": {
+        "name": "",
+        "type": 3,
+        "typeArguments": null
+      }
+    }
+  ],
   "messagesTypes": [],
   "configurables": []
 };
 
 const _storageSlots: StorageSlot[] = [
   {
-    "key": "b48b753af346966d0d169c0b2e3234611f65d5cfdb57c7b6e7cd6ca93707bee0",
+    "key": "de9090cb50e71c2588c773487d1da7066d0c719849a7e58dc8b6397a25c567c0",
     "value": "0000000000000000000000000000000000000000000000000000000000000000"
   }
 ];

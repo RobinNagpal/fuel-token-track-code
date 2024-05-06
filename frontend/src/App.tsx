@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { useConnectUI, useIsConnected, useWallet } from "@fuels/react";
-import { Address } from "fuels";
-// Import the contract factory -- you can find the name in src/contracts/contracts/index.ts.
-// You can also do command + space and the compiler will suggest the correct name.
+import { Address, BN } from "fuels";
 import { TokenTrackAbi__factory } from "./sway-api";
 import type { TokenTrackAbi } from "./sway-api";
 
 const CONTRACT_ID =
-  "0x24aec7f107ddbdf215364a574cf4b8bbc48e30872b0372e03b4bf59143c6f7f5";
+  "0xd6f6bd86e7f0bd3de449824465d1ca456bd9e594405438c387d590eda736a764";
 
 export default function Home() {
   const [contract, setContract] = useState<TokenTrackAbi>();
@@ -16,12 +14,13 @@ export default function Home() {
   const { wallet } = useWallet();
   const [mintTo, setMintTo] = useState("");
   const [mintAmount, setMintAmount] = useState("");
-  const [transferToAddress, setTransferToAddress] = useState("");
-  const [transferAmountToAddress, setTransferAmountToAddress] = useState("");
+  const [transferTo, setTransferTo] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
   const [burnAddress, setBurnAddress] = useState("");
   const [burnAmount, setBurnAmount] = useState("");
-  const [transferAmountToContract, setTransferAmountToContract] = useState("");
-  const [transferToContract, setTransferToContract] = useState("");
+  const [data, setData] = useState<
+    { address: string | undefined; identity: string; balance: BN }[]
+  >([]);
 
   useEffect(() => {
     async function connectContract() {
@@ -45,14 +44,6 @@ export default function Home() {
       const address = Address.fromString(mintTo);
       const addressInput = { value: address.toB256() };
       const addressIdentityInput = { Address: addressInput };
-      // const resp = await contract.functions
-      //   .read_addr_balance(addressInput)
-      //   .txParams({
-      //     gasPrice: 1,
-      //     gasLimit: 1_000_000,
-      //   })
-      //   .call();
-      // console.log("response: ", resp);
       await contract.functions
         .mint(addressIdentityInput, Number(mintAmount))
         .txParams({
@@ -65,20 +56,40 @@ export default function Home() {
     }
   };
 
+  async function getBalance() {
+    if (!contract) {
+      return;
+    }
+    try {
+      const balance = await contract.functions
+        .read_addr_balance({ value: wallet?.address.toB256()! })
+        .txParams({
+          gasPrice: 1,
+          gasLimit: 1_000_000,
+        })
+        .call();
+      setData([
+        {
+          address: wallet?.address.toString(),
+          identity: "Address",
+          balance: (balance as any).value.words[0],
+        },
+      ]);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   const handleTransferToAddress = async () => {
     if (!contract) {
       return alert("Contract not loaded");
     }
     try {
-      const address = Address.fromString(transferToAddress);
+      const address = Address.fromString(transferTo);
       const addressInput = { value: address.toB256() };
       const from = { value: wallet?.address.toB256()! };
       await contract.functions
-        .transfer_coins_to_address(
-          Number(transferAmountToAddress),
-          from,
-          addressInput
-        )
+        .transfer_coins_to_address(Number(transferAmount), from, addressInput)
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -109,34 +120,13 @@ export default function Home() {
     }
   };
 
-  const handleTransferToContract = async () => {
-    if (!contract) {
-      return alert("Contract not loaded");
-    }
-    try {
-      const address = Address.fromString(transferToContract);
-      const addressInput = { value: address.toB256() };
-      const from = { value: wallet?.address.toB256()! };
-      await contract.functions
-        .transfer_coins_to_contract(
-          Number(transferAmountToContract),
-          from,
-          addressInput
-        )
-        .txParams({
-          gasPrice: 1,
-          gasLimit: 1_000_000,
-        })
-        .call();
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <>
       {isConnected ? (
         <div className="token-form">
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <h1>Token Track</h1>
+          </div>
           <div className="form-field">
             <input
               type="text"
@@ -156,14 +146,14 @@ export default function Home() {
           <div className="form-field">
             <input
               type="text"
-              value={transferToAddress}
-              onChange={(e) => setTransferToAddress(e.target.value)}
+              value={transferTo}
+              onChange={(e) => setTransferTo(e.target.value)}
               placeholder="Address to transfer to"
             />
             <input
               type="number"
-              value={transferAmountToAddress}
-              onChange={(e) => setTransferAmountToAddress(e.target.value)}
+              value={transferAmount}
+              onChange={(e) => setTransferAmount(e.target.value)}
               placeholder="Amount to transfer"
             />
             <button onClick={handleTransferToAddress}>Transfer Tokens</button>
@@ -185,23 +175,38 @@ export default function Home() {
             <button onClick={handleBurn}>Burn Tokens</button>
           </div>
 
-          <div className="form-field">
-            <input
-              type="text"
-              value={transferToContract}
-              onChange={(e) => setTransferToContract(e.target.value)}
-              placeholder="Contract ID to transfer"
-            />
-            <input
-              type="number"
-              value={transferAmountToContract}
-              onChange={(e) => setTransferAmountToContract(e.target.value)}
-              placeholder="Amount to transfer"
-            />
-            <button onClick={handleTransferToContract}>
-              Transfer Tokens to Contract
-            </button>
-          </div>
+          <h2>Address Table</h2>
+          <button onClick={getBalance}>Show Balance</button>
+          <table style={{ borderCollapse: "collapse", width: "100%" }}>
+            <thead>
+              <tr>
+                <th style={{ border: "1px solid black", padding: "8px" }}>
+                  Address
+                </th>
+                <th style={{ border: "1px solid black", padding: "8px" }}>
+                  Identity
+                </th>
+                <th style={{ border: "1px solid black", padding: "8px" }}>
+                  Balance
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row: any, index: any) => (
+                <tr key={index}>
+                  <td style={{ border: "1px solid black", padding: "8px" }}>
+                    {row.address}
+                  </td>
+                  <td style={{ border: "1px solid black", padding: "8px" }}>
+                    {row.identity}
+                  </td>
+                  <td style={{ border: "1px solid black", padding: "8px" }}>
+                    {row.balance}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <button
