@@ -5,7 +5,7 @@ import { TokenTrackAbi__factory } from "./sway-api";
 import type { TokenTrackAbi } from "./sway-api";
 
 const CONTRACT_ID =
-  "0xd6f6bd86e7f0bd3de449824465d1ca456bd9e594405438c387d590eda736a764";
+  "0x07127c7516ac184724e0a549fa7b3bc0305e4526815821730b882c6ef8eda901";
 
 export default function Home() {
   const [contract, setContract] = useState<TokenTrackAbi>();
@@ -14,10 +14,12 @@ export default function Home() {
   const { wallet } = useWallet();
   const [mintTo, setMintTo] = useState("");
   const [mintAmount, setMintAmount] = useState("");
+  const [mintType, setMintType] = useState("Address");
   const [transferTo, setTransferTo] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
   const [burnAddress, setBurnAddress] = useState("");
   const [burnAmount, setBurnAmount] = useState("");
+  const [burnType, setBurnType] = useState("Address");
   const [data, setData] = useState<
     { address: string | undefined; identity: string; balance: BN }[]
   >([]);
@@ -36,16 +38,15 @@ export default function Home() {
     connectContract();
   }, [isConnected, wallet]);
 
-  const handleMint = async () => {
+  const handleMintToAddress = async () => {
     if (!contract) {
       return alert("Contract not loaded");
     }
     try {
       const address = Address.fromString(mintTo);
       const addressInput = { value: address.toB256() };
-      const addressIdentityInput = { Address: addressInput };
       await contract.functions
-        .mint(addressIdentityInput, Number(mintAmount))
+        .mint_to_address(addressInput, Number(mintAmount))
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -54,6 +55,29 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
+    setMintTo("");
+    setMintAmount("");
+  };
+
+  const handleMintToContract = async () => {
+    if (!contract) {
+      return alert("Contract not loaded");
+    }
+    try {
+      const address = Address.fromString(mintTo);
+      const addressInput = { value: address.toB256()! };
+      await contract.functions
+        .mint_to_contract(addressInput, Number(mintAmount))
+        .txParams({
+          gasPrice: 1,
+          gasLimit: 1_000_000,
+        })
+        .call();
+    } catch (error) {
+      console.error(error);
+    }
+    setMintTo("");
+    setMintAmount("");
   };
 
   async function getBalance() {
@@ -61,8 +85,10 @@ export default function Home() {
       return;
     }
     try {
+      const addressInput = { value: wallet?.address.toB256()! };
+      const addressIdentityInput = { Address: addressInput };
       const balance = await contract.functions
-        .read_addr_balance({ value: wallet?.address.toB256()! })
+        .get_balance(addressIdentityInput)
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -98,18 +124,19 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
+    setTransferAmount("");
+    setTransferTo("");
   };
 
-  const handleBurn = async () => {
+  const handleBurnFromAddress = async () => {
     if (!contract) {
       return alert("Contract not loaded");
     }
     try {
       const address = Address.fromString(burnAddress);
       const addressInput = { value: address.toB256() };
-      const addressIdentityInput = { Address: addressInput };
       await contract.functions
-        .burn(addressIdentityInput, Number(burnAmount))
+        .burn_from_address(addressInput, Number(burnAmount))
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -118,6 +145,29 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
+    setBurnAddress("");
+    setBurnAmount("");
+  };
+
+  const handleBurnFromContract = async () => {
+    if (!contract) {
+      return alert("Contract not loaded");
+    }
+    try {
+      const address = Address.fromString(burnAddress);
+      const addressInput = { value: address.toB256() };
+      await contract.functions
+        .burn_from_contract(addressInput, Number(burnAmount))
+        .txParams({
+          gasPrice: 1,
+          gasLimit: 1_000_000,
+        })
+        .call();
+    } catch (error) {
+      console.error(error);
+    }
+    setBurnAddress("");
+    setBurnAmount("");
   };
 
   return (
@@ -140,7 +190,23 @@ export default function Home() {
               onChange={(e) => setMintAmount(e.target.value)}
               placeholder="Amount to mint"
             />
-            <button onClick={handleMint}>Mint New Tokens</button>
+            <select
+              value={mintType}
+              onChange={(e) => setMintType(e.target.value)}
+              style={{ marginRight: "10px" }}
+            >
+              <option value="Address">Address</option>
+              <option value="Contract">Contract</option>
+            </select>
+            <button
+              onClick={
+                mintType === "Address"
+                  ? handleMintToAddress
+                  : handleMintToContract
+              }
+            >
+              Mint New Tokens
+            </button>
           </div>
 
           <div className="form-field">
@@ -172,7 +238,23 @@ export default function Home() {
               onChange={(e) => setBurnAmount(e.target.value)}
               placeholder="Amount to burn"
             />
-            <button onClick={handleBurn}>Burn Tokens</button>
+            <select
+              value={burnType}
+              onChange={(e) => setBurnType(e.target.value)}
+              style={{ marginRight: "10px" }}
+            >
+              <option value="Address">Address</option>
+              <option value="Contract">Contract</option>
+            </select>
+            <button
+              onClick={
+                burnType == "Address"
+                  ? handleBurnFromAddress
+                  : handleBurnFromContract
+              }
+            >
+              Burn Tokens
+            </button>
           </div>
 
           <h2>Address Table</h2>

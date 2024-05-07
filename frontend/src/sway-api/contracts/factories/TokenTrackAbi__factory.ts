@@ -86,7 +86,7 @@ const _abi = {
       "inputs": [
         {
           "name": "target",
-          "type": 2,
+          "type": 4,
           "typeArguments": null
         },
         {
@@ -95,7 +95,88 @@ const _abi = {
           "typeArguments": null
         }
       ],
-      "name": "burn",
+      "name": "burn_from_address",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "target",
+          "type": 5,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 6,
+          "typeArguments": null
+        }
+      ],
+      "name": "burn_from_contract",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "addr",
+          "type": 2,
+          "typeArguments": null
+        }
+      ],
+      "name": "get_balance",
+      "output": {
+        "name": "",
+        "type": 6,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "recipient",
+          "type": 4,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 6,
+          "typeArguments": null
+        }
+      ],
+      "name": "mint_to_address",
       "output": {
         "name": "",
         "type": 0,
@@ -115,7 +196,7 @@ const _abi = {
       "inputs": [
         {
           "name": "recipient",
-          "type": 2,
+          "type": 5,
           "typeArguments": null
         },
         {
@@ -124,7 +205,7 @@ const _abi = {
           "typeArguments": null
         }
       ],
-      "name": "mint",
+      "name": "mint_to_contract",
       "output": {
         "name": "",
         "type": 0,
@@ -136,52 +217,6 @@ const _abi = {
           "arguments": [
             "read",
             "write"
-          ]
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "addr",
-          "type": 4,
-          "typeArguments": null
-        }
-      ],
-      "name": "read_addr_balance",
-      "output": {
-        "name": "",
-        "type": 6,
-        "typeArguments": null
-      },
-      "attributes": [
-        {
-          "name": "storage",
-          "arguments": [
-            "read"
-          ]
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "addr",
-          "type": 5,
-          "typeArguments": null
-        }
-      ],
-      "name": "read_contract_balance",
-      "output": {
-        "name": "",
-        "type": 6,
-        "typeArguments": null
-      },
-      "attributes": [
-        {
-          "name": "storage",
-          "arguments": [
-            "read"
           ]
         }
       ]
