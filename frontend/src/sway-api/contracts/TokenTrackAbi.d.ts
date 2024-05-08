@@ -32,25 +32,28 @@ export type ContractIdOutput = ContractIdInput;
 
 interface TokenTrackAbiInterface extends Interface {
   functions: {
-    burn: FunctionFragment;
-    mint: FunctionFragment;
-    read_addr_balance: FunctionFragment;
-    read_contract_balance: FunctionFragment;
+    burn_from_address: FunctionFragment;
+    burn_from_contract: FunctionFragment;
+    get_balance: FunctionFragment;
+    mint_to_address: FunctionFragment;
+    mint_to_contract: FunctionFragment;
     transfer_coins_to_address: FunctionFragment;
     transfer_coins_to_contract: FunctionFragment;
   };
 
-  encodeFunctionData(functionFragment: 'burn', values: [IdentityInput, BigNumberish]): Uint8Array;
-  encodeFunctionData(functionFragment: 'mint', values: [IdentityInput, BigNumberish]): Uint8Array;
-  encodeFunctionData(functionFragment: 'read_addr_balance', values: [AddressInput]): Uint8Array;
-  encodeFunctionData(functionFragment: 'read_contract_balance', values: [ContractIdInput]): Uint8Array;
+  encodeFunctionData(functionFragment: 'burn_from_address', values: [AddressInput, BigNumberish]): Uint8Array;
+  encodeFunctionData(functionFragment: 'burn_from_contract', values: [ContractIdInput, BigNumberish]): Uint8Array;
+  encodeFunctionData(functionFragment: 'get_balance', values: [IdentityInput]): Uint8Array;
+  encodeFunctionData(functionFragment: 'mint_to_address', values: [AddressInput, BigNumberish]): Uint8Array;
+  encodeFunctionData(functionFragment: 'mint_to_contract', values: [ContractIdInput, BigNumberish]): Uint8Array;
   encodeFunctionData(functionFragment: 'transfer_coins_to_address', values: [BigNumberish, AddressInput, AddressInput]): Uint8Array;
   encodeFunctionData(functionFragment: 'transfer_coins_to_contract', values: [BigNumberish, ContractIdInput, ContractIdInput]): Uint8Array;
 
-  decodeFunctionData(functionFragment: 'burn', data: BytesLike): DecodedValue;
-  decodeFunctionData(functionFragment: 'mint', data: BytesLike): DecodedValue;
-  decodeFunctionData(functionFragment: 'read_addr_balance', data: BytesLike): DecodedValue;
-  decodeFunctionData(functionFragment: 'read_contract_balance', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'burn_from_address', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'burn_from_contract', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'get_balance', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'mint_to_address', data: BytesLike): DecodedValue;
+  decodeFunctionData(functionFragment: 'mint_to_contract', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'transfer_coins_to_address', data: BytesLike): DecodedValue;
   decodeFunctionData(functionFragment: 'transfer_coins_to_contract', data: BytesLike): DecodedValue;
 }
@@ -58,10 +61,11 @@ interface TokenTrackAbiInterface extends Interface {
 export class TokenTrackAbi extends Contract {
   interface: TokenTrackAbiInterface;
   functions: {
-    burn: InvokeFunction<[target: IdentityInput, amount: BigNumberish], void>;
-    mint: InvokeFunction<[recipient: IdentityInput, amount: BigNumberish], void>;
-    read_addr_balance: InvokeFunction<[addr: AddressInput], BN>;
-    read_contract_balance: InvokeFunction<[addr: ContractIdInput], BN>;
+    burn_from_address: InvokeFunction<[target: AddressInput, amount: BigNumberish], void>;
+    burn_from_contract: InvokeFunction<[target: ContractIdInput, amount: BigNumberish], void>;
+    get_balance: InvokeFunction<[addr: IdentityInput], BN>;
+    mint_to_address: InvokeFunction<[recipient: AddressInput, amount: BigNumberish], void>;
+    mint_to_contract: InvokeFunction<[recipient: ContractIdInput, amount: BigNumberish], void>;
     transfer_coins_to_address: InvokeFunction<[coins: BigNumberish, from: AddressInput, target: AddressInput], void>;
     transfer_coins_to_contract: InvokeFunction<[coins: BigNumberish, from: ContractIdInput, target: ContractIdInput], void>;
   };

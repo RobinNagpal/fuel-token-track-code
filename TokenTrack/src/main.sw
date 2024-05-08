@@ -14,13 +14,21 @@ storage {
 
 // Define the contract's ABI (Application Binary Interface)
 abi MyContract {
-    // Function to mint new tokens for a specific recipient with an amount
+    // Function to mint new tokens for a specific address recipient with an amount
     #[storage(read, write)]
-    fn mint(recipient: Identity, amount: u64);
+    fn mint_to_address(recipient: Address, amount: u64);
 
-    // Function to burn tokens from a specific identity's balance
+    // Function to mint new tokens for a specific contract recipient with an amount
     #[storage(read, write)]
-    fn burn(target: Identity, amount: u64);
+    fn mint_to_contract(recipient: ContractId, amount: u64);
+
+    // Function to burn tokens from a specific Address's balance
+    #[storage(read, write)]
+    fn burn_from_address(target: Address, amount: u64);
+
+    // Function to burn tokens from a specific contract's balance
+    #[storage(read, write)]
+    fn burn_from_contract(target: ContractId, amount: u64);
 
     // Function to transfer tokens between two identities
     #[storage(read, write)]
@@ -31,40 +39,87 @@ abi MyContract {
     fn transfer_coins_to_contract(coins: u64, from: ContractId, target: ContractId);
 
     #[storage(read)]
-    fn read_addr_balance(addr: Address) -> u64;
-
-    #[storage(read)]
-    fn read_contract_balance(addr: ContractId) -> u64;
+    fn get_balance(addr: Identity) -> u64;
 }
 
 // Implement the `MyContract` trait for this contract
 impl MyContract for Contract {
-    // Implementation of the `mint` function
+    // Implementation of the `mint_to_address` function
     #[storage(read, write)]
-    fn mint(recipient: Identity, amount: u64) {
+    fn mint_to_address(recipient: Address, amount: u64) {
         // Read the current total supply from storage
         storage
             .total_supply
             .write(amount + storage.total_supply.read());
 
-        match recipient {
-            Identity::Address(addr) => transfer_to_address(addr, amount),
-            Identity::ContractId(addr) => transfer_to_contract(addr, amount),
-        };
+        let b256_addr = recipient.into();
+        // Access the sender's balance (or initialize it to 0 if it doesn't exist)
+        let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
+        let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
+        balance += amount;
+        storage.balances.insert(identity, balance);
     }
 
-    // Implementation of the `burn` function
+    // Implementation of the `mint_to_contract` function
     #[storage(read, write)]
-    fn burn(target: Identity, amount: u64) {
+    fn mint_to_contract(recipient: ContractId, amount: u64) {
+        // Read the current total supply from storage
+        storage
+            .total_supply
+            .write(amount + storage.total_supply.read());
+
+        // let b256_addr = recipient.into();
+        // Access the sender's balance (or initialize it to 0 if it doesn't exist)
+        let identity: Identity = Identity::ContractId(ContractId::from(recipient.value)); // Casting Address to Identity
+        let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
+        balance += amount;
+        storage.balances.insert(identity, balance);
+    }
+
+    // Implementation of the `burn_from_address` function
+    #[storage(read, write)]
+    fn burn_from_address(target: Address, amount: u64) {
         // Read the current total supply from storage
         storage
             .total_supply
             .write(storage.total_supply.read() - amount);
 
-        match target {
-            Identity::Address(addr) => burn_from_address(addr, amount),
-            Identity::ContractId(id) => burn_from_contract(id, amount),
-        };
+        let b256_addr = target.into();
+        let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
+        // Access the target's balance (or initialize it to 0 if it doesn't exist)
+        let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
+
+        // Ensure sufficient balance before burning
+        assert(target_balance >= amount);
+
+        // Update the target's balance after burning
+        target_balance -= amount;
+
+        // Store the updated balance back in the storage map
+        storage.balances.insert(identity, target_balance);
+    }
+
+    // Implementation of the `burn_from_contract` function
+    #[storage(read, write)]
+    fn burn_from_contract(target: ContractId, amount: u64) {
+        // Read the current total supply from storage
+        storage
+            .total_supply
+            .write(storage.total_supply.read() - amount);
+
+        let b256_addr = target.into();
+        let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
+        // Access the target's balance (or initialize it to 0 if it doesn't exist)
+        let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
+
+        // Ensure sufficient balance before burning
+        assert(target_balance >= amount);
+
+        // Update the target's balance after burning
+        target_balance -= amount;
+
+        // Store the updated balance back in the storage map
+        storage.balances.insert(identity, target_balance);
     }
 
     // Implementation of the `transfer_coins_to_address` function
@@ -122,69 +177,7 @@ impl MyContract for Contract {
     }
 
     #[storage(read)]
-    fn read_addr_balance(addr: Address) -> u64 {
-        let b256_addr = addr.into();
-        let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
-        return storage.balances.get(identity).try_read().unwrap_or(0);
+    fn get_balance(addr: Identity) -> u64 {
+        return storage.balances.get(addr).try_read().unwrap_or(0);
     }
-
-    #[storage(read)]
-    fn read_contract_balance(addr: ContractId) -> u64 {
-        let b256_addr = addr.into();
-        let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
-        return storage.balances.get(identity).try_read().unwrap_or(0);
-    }
-}
-
-#[storage(read, write)]
-fn transfer_to_address(addr: Address, amount: u64) {
-    let b256_addr = addr.into();
-    // Access the sender's balance (or initialize it to 0 if it doesn't exist)
-    let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
-    let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
-    balance += amount;
-    storage.balances.insert(identity, balance);
-}
-
-#[storage(read, write)]
-fn transfer_to_contract(addr: ContractId, amount: u64) {
-    let b256_addr = addr.into();
-    let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
-    let mut balance = storage.balances.get(identity).try_read().unwrap_or(0);
-    balance += amount;
-    storage.balances.insert(identity, balance);
-}
-
-#[storage(read, write)]
-fn burn_from_address(addr: Address, amount: u64) {
-    let b256_addr = addr.into();
-    let identity: Identity = Identity::Address(Address::from(b256_addr)); // Casting Address to Identity
-    // Access the target's balance (or initialize it to 0 if it doesn't exist)
-    let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
-
-    // Ensure sufficient balance before burning
-    assert(target_balance >= amount);
-
-    // Update the target's balance after burning
-    target_balance -= amount;
-
-    // Store the updated balance back in the storage map
-    storage.balances.insert(identity, target_balance);
-}
-
-#[storage(read, write)]
-fn burn_from_contract(addr: ContractId, amount: u64) {
-    let b256_addr = addr.into();
-    let identity: Identity = Identity::ContractId(ContractId::from(b256_addr)); // Casting Address to Identity
-    // Access the target's balance (or initialize it to 0 if it doesn't exist)
-    let mut target_balance = storage.balances.get(identity).try_read().unwrap_or(0);
-
-    // Ensure sufficient balance before burning
-    assert(target_balance >= amount);
-
-    // Update the target's balance after burning
-    target_balance -= amount;
-
-    // Store the updated balance back in the storage map
-    storage.balances.insert(identity, target_balance);
 }
