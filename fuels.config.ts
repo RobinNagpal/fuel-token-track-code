@@ -2,9 +2,9 @@ import { createConfig } from 'fuels';
 
 export default createConfig({
   contracts: [
-        '../TokenTrack',
+        'contracts/TokenTrack',
   ],
-  output: './src/sway-api',
+  output: './frontend/src/sway-api',
 });
 
 /**
