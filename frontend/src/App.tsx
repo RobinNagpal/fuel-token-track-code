@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useConnectUI, useIsConnected, useWallet } from "@fuels/react";
 import { Address, BN } from "fuels";
-import { TokenTrackAbi__factory } from "./sway-api";
-import type { TokenTrackAbi } from "./sway-api";
+import { TokenTrackAbi__factory } from "./sway-contracts-api";
+import type { TokenTrackAbi } from "./sway-contracts-api";
 
 const CONTRACT_ID =
-  "0x07127c7516ac184724e0a549fa7b3bc0305e4526815821730b882c6ef8eda901";
+  "0x450f6e34ba7872d716133327848693872afad44479ea116418ab8714d6ba7082";
 
 export default function Home() {
   const [contract, setContract] = useState<TokenTrackAbi>();
@@ -17,9 +17,8 @@ export default function Home() {
   const [mintType, setMintType] = useState("Address");
   const [transferTo, setTransferTo] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
-  const [burnAddress, setBurnAddress] = useState("");
+  const [transferType, setTransferType] = useState("Address");
   const [burnAmount, setBurnAmount] = useState("");
-  const [burnType, setBurnType] = useState("Address");
   const [data, setData] = useState<
     { address: string | undefined; identity: string; balance: BN }[]
   >([]);
@@ -35,7 +34,34 @@ export default function Home() {
       }
     }
 
+    async function getBalance() {
+      if (!contract) {
+        return;
+      }
+      try {
+        const addressInput = { value: wallet?.address.toB256()! };
+        const addressIdentityInput = { Address: addressInput };
+        const balance = await contract.functions
+          .get_balance(addressIdentityInput)
+          .txParams({
+            gasPrice: 1,
+            gasLimit: 1_000_000,
+          })
+          .dryRun();
+        setData([
+          {
+            address: wallet?.address.toString(),
+            identity: "Address",
+            balance: (balance as any).value.words[0],
+          },
+        ]);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     connectContract();
+    getBalance();
   }, [isConnected, wallet]);
 
   const handleMintToAddress = async () => {
@@ -93,7 +119,7 @@ export default function Home() {
           gasPrice: 1,
           gasLimit: 1_000_000,
         })
-        .call();
+        .dryRun();
       setData([
         {
           address: wallet?.address.toString(),
@@ -128,15 +154,16 @@ export default function Home() {
     setTransferTo("");
   };
 
-  const handleBurnFromAddress = async () => {
+  const handleTransferToContract = async () => {
     if (!contract) {
       return alert("Contract not loaded");
     }
     try {
-      const address = Address.fromString(burnAddress);
+      const address = Address.fromString(transferTo);
       const addressInput = { value: address.toB256() };
+      const from = { value: wallet?.address.toB256()! };
       await contract.functions
-        .burn_from_address(addressInput, Number(burnAmount))
+        .transfer_coins_to_contract(Number(transferAmount), from, addressInput)
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -145,19 +172,17 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
-    setBurnAddress("");
-    setBurnAmount("");
+    setTransferAmount("");
+    setTransferTo("");
   };
 
-  const handleBurnFromContract = async () => {
+  const handleBurn = async () => {
     if (!contract) {
       return alert("Contract not loaded");
     }
     try {
-      const address = Address.fromString(burnAddress);
-      const addressInput = { value: address.toB256() };
       await contract.functions
-        .burn_from_contract(addressInput, Number(burnAmount))
+        .burn_token(Number(burnAmount))
         .txParams({
           gasPrice: 1,
           gasLimit: 1_000_000,
@@ -166,7 +191,6 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
-    setBurnAddress("");
     setBurnAmount("");
   };
 
@@ -222,25 +246,9 @@ export default function Home() {
               onChange={(e) => setTransferAmount(e.target.value)}
               placeholder="Amount to transfer"
             />
-            <button onClick={handleTransferToAddress}>Transfer Tokens</button>
-          </div>
-
-          <div className="form-field">
-            <input
-              type="text"
-              value={burnAddress}
-              onChange={(e) => setBurnAddress(e.target.value)}
-              placeholder="Address to burn"
-            />
-            <input
-              type="number"
-              value={burnAmount}
-              onChange={(e) => setBurnAmount(e.target.value)}
-              placeholder="Amount to burn"
-            />
             <select
-              value={burnType}
-              onChange={(e) => setBurnType(e.target.value)}
+              value={mintType}
+              onChange={(e) => setTransferType(e.target.value)}
               style={{ marginRight: "10px" }}
             >
               <option value="Address">Address</option>
@@ -248,13 +256,23 @@ export default function Home() {
             </select>
             <button
               onClick={
-                burnType == "Address"
-                  ? handleBurnFromAddress
-                  : handleBurnFromContract
+                transferType === "Address"
+                  ? handleTransferToAddress
+                  : handleTransferToContract
               }
             >
-              Burn Tokens
+              Transfer Tokens
             </button>
+          </div>
+
+          <div className="form-field">
+            <input
+              type="number"
+              value={burnAmount}
+              onChange={(e) => setBurnAmount(e.target.value)}
+              placeholder="Amount to burn"
+            />
+            <button onClick={handleBurn}>Burn Tokens</button>
           </div>
 
           <h2>Address Table</h2>

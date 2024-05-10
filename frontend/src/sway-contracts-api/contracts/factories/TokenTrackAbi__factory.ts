@@ -4,9 +4,9 @@
 /* eslint-disable */
 
 /*
-  Fuels version: 0.82.0
-  Forc version: 0.49.3
-  Fuel-Core version: 0.22.1
+  Fuels version: 0.84.0
+  Forc version: 0.56.0
+  Fuel-Core version: 0.26.0
 */
 
 import { Interface, Contract, ContractFactory } from "fuels";
@@ -85,46 +85,12 @@ const _abi = {
     {
       "inputs": [
         {
-          "name": "target",
-          "type": 4,
-          "typeArguments": null
-        },
-        {
           "name": "amount",
           "type": 6,
           "typeArguments": null
         }
       ],
-      "name": "burn_from_address",
-      "output": {
-        "name": "",
-        "type": 0,
-        "typeArguments": null
-      },
-      "attributes": [
-        {
-          "name": "storage",
-          "arguments": [
-            "read",
-            "write"
-          ]
-        }
-      ]
-    },
-    {
-      "inputs": [
-        {
-          "name": "target",
-          "type": 5,
-          "typeArguments": null
-        },
-        {
-          "name": "amount",
-          "type": 6,
-          "typeArguments": null
-        }
-      ],
-      "name": "burn_from_contract",
+      "name": "burn_token",
       "output": {
         "name": "",
         "type": 0,
