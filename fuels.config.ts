@@ -4,7 +4,7 @@ export default createConfig({
   contracts: [
         'contracts/TokenTrack',
   ],
-  output: './frontend/src/sway-api',
+  output: './frontend/src/sway-contracts-api',
 });
 
 /**
